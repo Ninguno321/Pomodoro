@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Burbank+Big+Condensed+Black&family=Courier+New&family=Orbitron:wght@400;700&display=swap">
+    <title>Reloj Pomodoro</title>
+    <style>
+        @font-face {
+        font-family: 'Burbank Big Regular Black';
+        src: url('BurbankBigRegularBlack.otf') format('opentype');
+        }
+        @font-face {
+            font-family: 'Arial';
+            src: url('Arial.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Courier New';
+            src: url('CourierNew.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Digital-7';
+            src: url('https://fonts.cdnfonts.com/s/17292/Digital-7.woff') format('woff');
+        }
+        @font-face {
+            font-family: 'LCD';
+            src: url('LCD.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Seven Segment';
+            src: url('SevenSegment.ttf') format('truetype');
+        }
+
+        body.dark-mode {
+            background: #181818; /* Cambia el fondo a negro */
+            color: #ffffff;
+            background-image: url('default-background.jpg'); /* Mantén la imagen de fondo */
+            background-size: cover; /* Asegura que la imagen de fondo cubra toda la pantalla */
+            background-repeat: no-repeat; /* Evita que la imagen se repita */
+            background-attachment: fixed; /* Fija la imagen de fondo */
+            background-position: center; /* Centra la imagen de fondo */
+        }
+        .container.dark-mode {
+            background: rgba(53, 52, 52, 0.8);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        
+        .clock-container.dark-mode {
+            background: rgba(34, 34, 34, 0.8);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .controls-container.dark-mode {
+            background: rgba(34, 34, 34, 0.8);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .color-box {
+            width: 30px;
+            height: 30px;
+            display: inline-block;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.3s, opacity 0.3s;
+            position: relative;
+            opacity: 1; /* Por defecto, todos los recuadros tienen opacidad 1 */
+        }
+
+        .color-box.selected {
+            opacity: 1; /* El recuadro seleccionado mantiene su opacidad */
+        }
+
+        .color-label {
+            display: none; /* Oculto por defecto */
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            font-size: 10px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            color: #ffffff;
+        }
+
+        /* Solo mostrar al hacer hover o cuando está seleccionado */
+        .color-box:hover .color-label,
+        .color-box.selected .color-label {
+            display: block;
+            color: #008cff;
+        }
+
+        /* Al editar la etiqueta */
+        .color-label:focus {
+            display: block !important; /* Se mantiene visible durante la edición */
+            background: #fff;
+            border: 1px solid #cccccc00;
+            padding: 2px;
+            color: #008cff;
+        }
+
+        body.dark-mode .color-box {
+            border: 1px solid #ffffff;
+        }
+
+        body.dark-mode .color-label {
+            color: #ffffff;
+        }
+
+        .selected-color-label {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #000;
+        }
+
+        body.dark-mode .selected-color-label {
+            color: #ffffff;
+        }
+
+        .label.dark-mode {
+            background-color: #282727;
+            box-shadow: inset 0 0 5px 4px rgb(16, 16, 16),
+                        inset 0 0 20px 1px rgba(236, 0, 0, 0.322), 
+                        10px 20px 30px rgba(255, 255, 255, 0.096),
+                        inset 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        body.dark-mode .color-box {
+            border: 1px solid #ffffff;
+        }
+
+        body.dark-mode .color-label {
+            color: #ffffff;
+        }
+
+        .selected-color-label {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #000;
+        }
+
+        body.dark-mode .selected-color-label {
+            color: #ffffff;
+        }
+
+        .label.dark-mode::before {
+            background-color: #ffffff;
+            background-image: linear-gradient(130deg, #e2e2e2 10%, #535353 11%, #dfdfdf 62%);
+        }
+
+        button.dark-mode {
+            background-image: linear-gradient(130deg, #222222, #595959);
+            color: #ededed;
+        }
+
+        .checkbox-container.dark-mode .checkmark {
+            background-color: #333333;
+        }
+        button.stop-sound.dark-mode {
+            background-image: linear-gradient(130deg, #222222, #595959);
+            color: #ededed;
+        }
+
+        .checkbox-container.dark-mode .custom-checkbox:checked ~ .checkmark {
+            background-color: #ffffff;
+        }
+
+        .checkbox-container.dark-mode .custom-checkbox:checked ~ .checkmark:after {
+            border-color: #000000;
+        }
+
+        .inputbox.dark-mode input {
+            color: #ffffff;
+        }
+
+        .inputbox.dark-mode span {
+            color: #8f8f8f;
+        }
+
+        .inputbox.dark-mode i {
+            background: #424242;
+        }
+
+        .inputbox.dark-mode input:valid ~ span,
+        .inputbox.dark-mode input:focus ~ span {
+            color: #ffffff;
+        }
+
+        .inputbox.dark-mode input:valid ~ i,
+        .inputbox.dark-mode input:focus ~ i {
+            height: 44px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: url('default-background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.411);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 1000px;
+        }
+        .clock-container {
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clock {
+            flex: 1;
+            font-size: 48px;
+            text-align: center;
+            cursor: pointer; /* Cambia el cursor a una mano */
+            transition: transform 0.2s ease-in-out; /* Añade una transición suave */
+        }
+        .clock:hover {
+            transform: scale(1.05); /* Aumenta ligeramente el tamaño al pasar el ratón */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Añade una sombra sutil */
+        }
+
+        .clock-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: 15px;
+            min-width: 120px;
+        }
+
+        #stopSoundContainer {
+            margin-bottom: 10px;
+        }
+
+        .controls-container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .controls {
+            display: flex; /* Alinea los botones horizontalmente */
+            justify-content: center;
+            align-items: center; /* Centra verticalmente */
+            gap: 10px; /* Espacio entre los botones */
+            margin-bottom: 20px;
+        }
+        .settings {
+            display: none;
+            margin-top: 20px;
+        }
+        .settings input {
+            margin: 5px;
+        }
+        .label {
+            height: 60px;
+            width: 120px;
+            background-color: #ffffff;
+            border-radius: 30px;
+            box-shadow: inset 0 0 5px 4px rgba(255, 255, 255, 1),
+                        inset 0 0 20px 1px rgba(0, 0, 0, 0.488), 
+                        10px 20px 30px rgba(0, 0, 0, 0.096),
+                        inset 0 0 0 3px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.4s;
+        }
+        .label:hover {
+            transform: perspective(100px) rotateX(5deg) rotateY(-5deg);
+        }
+        #checkbox:checked ~ .label:hover {
+            transform: perspective(100px) rotateX(-5deg) rotateY(5deg);
+        }
+        #checkbox {
+            display: none;
+        }
+        #checkbox:checked ~ .label::before {
+            left: 70px;
+            background-color: #000000;
+            background-image: linear-gradient(315deg, #000000 0%, #414141 70%);
+            transition: 0.4s;
+        }
+        .label::before {
+            position: absolute;
+            content: "";
+            height: 40px;
+            width: 40px;
+            border-radius: 50%;
+            background-color: #000000;
+            background-image: linear-gradient(130deg, #757272 10%, #ffffff 11%, #726f6f 62%);
+            left: 10px;
+            box-shadow: 0 2px 1px rgba(0, 0, 0, 0.3), 10px 10px 10px rgba(0, 0, 0, 0.3);
+            transition: 0.4s;
+        }
+        button.stop-sound {
+            display: flex;
+            color: #fff;
+            justify-content: center;
+            align-items: center;
+            width: 100px; /* Ajusta el ancho del botón según sea necesario */
+            height: 40px; /* Ajusta la altura del botón según sea necesario */
+            margin-top: 10px; /* Añade un margen superior para separar el botón del reloj */
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button {
+            border: none;
+            color: #fff;
+            background-image: linear-gradient(30deg, #205ef0, #31acbc);
+            border-radius: 20px;
+            background-size: 100% auto;
+            font-family: inherit;
+            font-size: 12px; /* Reducido el tamaño del botón */
+            height: 40px; /* Ajusta la altura del botón */
+            padding: 0.9em 1em; /* Reducido el tamaño del botón */
+            margin: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-position: right center;
+            background-size: 200% auto;
+            animation: pulse512 1.5s infinite;
+        }
+        @keyframes pulse512 {
+            0% {
+                box-shadow: 0 0 0 0 #05bada66;
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgb(218 103 68 / 0%);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgb(218 103 68 / 0%);
+            }
+        }
+        .checkbox-container {
+            display: inline-block;
+            position: relative;
+            padding-left: 35px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            user-select: none;
+        }
+        .custom-checkbox {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .checkmark {
+            position: absolute;
+            top: -5px; /* Subido el cuadro de marcado */
+            left: 0;
+            height: 25px;
+            width: 25px;
+            background-color: #eee;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 9px;
+            top: 5px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        .custom-checkbox:checked ~ .checkmark {
+            background-color: #2196F3;
+            box-shadow: 0 3px 7px rgba(33, 150, 243, 0.3);
+        }
+        .custom-checkbox:checked ~ .checkmark:after {
+            display: block;
+        }
+        @keyframes checkAnim {
+            0% {
+                height: 0;
+            }
+            100% {
+                height: 10px;
+            }
+        }
+        .custom-checkbox:checked ~ .checkmark:after {
+            animation: checkAnim 0.2s forwards;
+        }
+        .btn {
+            background-color: transparent;
+            position: relative;
+            border: none;
+        }
+        .btn::after {
+            content: 'delete';
+            position: absolute;
+            top: -130%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: fit-content;
+            height: fit-content;
+            background-color: rgb(168, 7, 7);
+            padding: 4px 8px;
+            border-radius: 5px;
+            transition: .2s linear;
+            transition-delay: .2s;
+            color: white;
+            text-transform: uppercase;
+            font-size: 12px;
+            opacity: 0;
+            visibility: hidden;
+        }
+        .icon {
+            transform: scale(1.2);
+            transition: .2s linear;
+        }
+        .btn:hover > .icon {
+            transform: scale(1.5);
+        }
+        .btn:hover > .icon path {
+            fill: rgb(168, 7, 7);
+        }
+        .btn:hover::after {
+            visibility: visible;
+            opacity: 1;
+            top: -160%;
+        }
+        .add-btn {
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.3s;
+            background: transparent; /* Fondo transparente */
+            width: 30px; /* Ajusta el ancho del botón */
+            height: 30px; /* Ajusta la altura del botón */
+            padding: 10px; /* Ajusta el padding del botón */
+        }
+        .add-btn:hover {
+            transform: rotate(90deg);
+        }
+        .add-btn svg {
+            width: 25px;
+            height: 25px;
+            stroke: #4ce3f7;
+            fill: none;
+            transition: fill 0.3s, stroke 0.3s;
+        }
+        .add-btn:hover svg {
+            fill: #4ce3f7;
+            stroke: #1f7cff;
+        }
+        /* From Uiverse.io by philipo30 */
+        .delete-button {
+            position: relative;
+            padding: 0.5em;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.2s ease;
+        }
+        .trash-svg {
+            width: 2em;
+            height: 2em;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            overflow: visible;
+        }
+        #lid-group {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .delete-button:hover #lid-group {
+            transform: rotate(-28deg) translateY(2px);
+        }
+        .delete-button:active #lid-group {
+            transform: rotate(-12deg) scale(0.98);
+        }
+        .delete-button:hover .trash-svg {
+            transform: scale(1.08) rotate(3deg);
+        }
+        .delete-button:active .trash-svg {
+            transform: scale(0.96) rotate(-1deg);
+        }
+        /* From Uiverse.io by VijinV */
+        .inputbox {
+            position: relative;
+            width: 196px;
+        }
+        .inputbox input {
+            position: relative;
+            width: 100%;
+            padding: 20px 10px 10px;
+            background: transparent;
+            outline: none;
+            box-shadow: none;
+            border: none;
+            color: #000000;
+            font-size: 1em;
+            letter-spacing: 0.05em;
+            transition: 0.5s;
+            z-index: 10;
+        }
+        .inputbox span {
+            position: absolute;
+            left: 0;
+            padding: 20px 10px 10px;
+            font-size: 1em;
+            color: #8f8f8f;
+            letter-spacing: 0.05em;
+            transition: 0.5s;
+            pointer-events: none;
+        }
+        .inputbox input:valid ~ span,
+        .inputbox input:focus ~ span {
+            color: #d2d2d2;
+            transform: translateX(-10px) translateY(-34px);
+            font-size: 0.75em;
+        }
+        .inputbox i {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2px;
+            background: #d2d2d2;
+            border-radius: 4px;
+            transition: 0.5s;
+            pointer-events: none;
+            z-index: 9;
+        }
+        .inputbox input:valid ~ i,
+        .inputbox input:focus ~ i {
+            height: 44px;
+        }
+        .chart-bar-container {
+            display: flex;
+            margin: 12px 0;
+            position: relative;
+            align-items: center;
+        }
+
+        .chart-bar-label {
+            width: 80px;
+            text-align: right;
+            padding-right: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        .chart-bar {
+            display: flex;
+            flex-grow: 1;
+            height: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .chart-bar-study {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+
+        .chart-bar-break {
+            background: linear-gradient(90deg, #2196F3, #03A9F4);
+        }
+
+        .chart-bar-value {
+            margin-left: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+
+        body.dark-mode #chartContainer {
+            background: rgba(34, 34, 34, 0.9);
+            color: rgb(255, 255, 255);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode #chartInfo {
+            border-top: 1px solid #ffffff;
+        }
+
+        body.dark-mode .chart-bar-value {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <audio id="alarmSound" src="https://www.soundjay.com/free-music/jungle-run-01.mp3" preload="auto"></audio>    <div class="container">
+        <div class="clock-container">
+            <div class="clock" id="clock" onclick="switchTimer()">25:00</div>
+            <div class="clock-right">
+                <div id="stopSoundContainer" style="display: none;">
+                    <button class="stop-sound" onclick="stopAlarm()">Detener Alarma</button>
+                </div>
+                <div class="selected-color-label" id="selectedColorLabel"></div>
+            </div>
+        </div>
+        <div class="controls-container">
+            <div class="controls">
+                <div class="container">
+                    <input type="checkbox" name="checkbox" id="checkbox" onclick="togglePomodoro()" />
+                    <label for="checkbox" class="label"></label>
+                </div>
+                <button onclick="resetPomodoro()">Reset</button>
+                <button onclick="toggleSettings()">Config</button>
+            </div>
+            <div class="settings" id="settings">
+                <label>Estudio (min): <input type="number" id="workTime" value="25"></label><br>
+                <label>Descanso (min): <input type="number" id="breakTime" value="5"></label><br>
+                <label>Fondo: 
+                    <select id="backgroundSelect" onchange="handleBackgroundChange()">
+                        <option value="none">Ninguno</option>
+                        <option value="file">Seleccionar archivo</option>
+                    </select>
+                    <input type="file" id="background" accept="image/*" style="display: none;" onchange="applySettings()">
+                </label><br><br>
+                <label>Música: 
+                    <select id="musicSelect" onchange="handleMusicChange()">
+                        <option value="none">Ninguno</option>
+                        <option value="file">Seleccionar archivo</option>
+                    </select>
+                    <input type="file" id="music" accept="audio/*" style="display: none;" onchange="applySettings()">
+                </label><br><br> <!-- Añadir espacio adicional -->
+                <label>Estilo de reloj: 
+                    <select id="clockStyle" onchange="handleClockStyleChange()">
+                        <option value="'Burbank Big Condensed Black', sans-serif">Burbank Big Condensed Black</option>
+                        <option value="'Arial', sans-serif">Arial</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="'Digital-7', sans-serif">Digital-7</option>
+                        <option value="'Orbitron', sans-serif">Orbitron</option>
+                        <option value="custom">Personalizada</option>
+                    </select>
+                    <input type="file" id="customFont" accept=".ttf, .otf" style="display: none;" onchange="applySettings()">
+                </label><br><br> <!-- Añadir espacio adicional -->
+                <label>Tamaño del reloj: <input type="number" id="clockSize" value="48"></label><br>
+                <button onclick="applySettings()">Aplicar</button>
+            </div>
+        </div>
+    </div>
+    <div class="tasks-container" style="position: absolute; left: 20px; top: 20px;">
+        <button onclick="toggleLeftMenu()">Opciones</button>
+        <div id="leftMenu" style="display: none;">
+            <button onclick="dummyFunction()">Tiempo registrado</button>
+            <button onclick="toggleColorOptions()">Elegir Color</button>
+            <div id="colorOptions" style="display: none;">
+                <div class="color-box" style="background-color: #FF5733;" onclick="selectColor(this, '#FF5733', event)">
+                    <input type="text" class="color-label" placeholder="Etiqueta" onfocus="editLabel(this)" onblur="saveLabel(this)" onclick="event.stopPropagation();">
+                </div>
+                <div class="color-box" style="background-color: #33FF57;" onclick="selectColor(this, '#33FF57', event)">
+                    <input type="text" class="color-label" placeholder="Etiqueta" onfocus="editLabel(this)" onblur="saveLabel(this)" onclick="event.stopPropagation();">
+                </div>
+                <div class="color-box" style="background-color: #3357FF;" onclick="selectColor(this, '#3357FF', event)">
+                    <input type="text" class="color-label" placeholder="Etiqueta" onfocus="editLabel(this)" onblur="saveLabel(this)" onclick="event.stopPropagation();">
+                </div>
+                <div class="color-box" style="background-color: #F333FF;" onclick="selectColor(this, '#F333FF', event)">
+                    <input type="text" class="color-label" placeholder="Etiqueta" onfocus="editLabel(this)" onblur="saveLabel(this)" onclick="event.stopPropagation();">
+                </div>
+                <div class="color-box" style="background-color: #FF33A1;" onclick="selectColor(this, '#FF33A1', event)">
+                    <input type="text" class="color-label" placeholder="Etiqueta" onfocus="editLabel(this)" onblur="saveLabel(this)" onclick="event.stopPropagation();">
+                </div>
+                <div class="color-box" style="background-color: #33FFF5;" onclick="selectColor(this, '#33FFF5', event)">
+                    <input type="text" class="color-label" placeholder="Etiqueta" onfocus="editLabel(this)" onblur="saveLabel(this)" onclick="event.stopPropagation();">
+                </div>
+                <div class="color-box" style="background-color: #F5FF33;" onclick="selectColor(this, '#F5FF33', event)">
+                    <input type="text" class="color-label" placeholder="Etiqueta" onfocus="editLabel(this)" onblur="saveLabel(this)" onclick="event.stopPropagation();">
+                </div>
+                <div class="color-box" style="background-color: #FF8C33;" onclick="selectColor(this, '#FF8C33', event)">
+                    <input type="text" class="color-label" placeholder="Etiqueta" onfocus="editLabel(this)" onblur="saveLabel(this)" onclick="event.stopPropagation();">
+                </div>                
+            </div>
+        </div>
+    </div>
+    <div class="tasks-container" style="position: absolute; right: 20px; top: 20px;">
+        <button onclick="toggleDarkMode()">Modo Oscuro</button>
+        <button onclick="toggleTaskList()">Desplegar Lista</button>
+        <ul id="taskList" style="list-style-type: none; padding: 0; display: none;"></ul>
+        <button class="add-btn" onclick="addTask()" style="display: none; margin-top: 10px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke-width="1.5"></path>
+                <path d="M8 12H16" stroke-width="1.5"></path>
+                <path d="M12 16V8" stroke-width="1.5"></path>
+            </svg>
+        </button>
+    </div>
+    <div id="chartContainer" style="display: none; position: absolute; left: 20px; bottom: 100px; background: rgba(101, 101, 101, 0.554); padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); min-width: 300px; max-width: 80%;">
+        <h3 style="margin-top: 0;">Tiempo de Estudio por Materia</h3>
+        <div id="chart"></div>
+        <div id="chartInfo" style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd; display: none;">
+            <h4 id="chartInfoTitle" style="margin-top: 0;">Información Detallada</h4>
+            <div id="chartInfoContent"></div>
+        </div>
+    </div>
+    <script>
+        let workTime = 25 * 60;
+        let breakTime = 5 * 60;
+        let isWorking = true;
+        let timer;
+        let clockElement = document.getElementById('clock');
+
+
+        let studyTime = {};
+        let breakTimeRecord = {};
+
+        function switchTimer() {
+            if (timer) {
+                pausePomodoro();
+            }
+            isWorking = !isWorking;
+            
+            // Resetear los tiempos para no perder segundos al cambiar
+            workTime = document.getElementById('workTime').value * 60;
+            breakTime = document.getElementById('breakTime').value * 60;
+            
+            updateClockDisplay(); // Función nueva que solo actualiza la visualización
+        }
+        
+        function toggleLeftMenu() {
+            let leftMenu = document.getElementById('leftMenu');
+            leftMenu.style.display = leftMenu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function dummyFunction() {
+            let chartContainer = document.getElementById('chartContainer');
+            if (chartContainer.style.display === 'none') {
+                chartContainer.style.display = 'block';
+                updateChart();
+            } else {
+                chartContainer.style.display = 'none';
+                document.getElementById('chartInfo').style.display = 'none';
+            }
+        }
+
+        function toggleColorOptions() {
+            let colorOptions = document.getElementById('colorOptions');
+            colorOptions.style.display = colorOptions.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function stopAlarm() {
+            let alarmSound = document.getElementById('alarmSound');
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+            document.getElementById('stopSoundContainer').style.display = 'none';
+        }
+        let selectedBox = null;
+        let selectedColor = null;
+
+        function selectColor(box, color, event) {
+        if (selectedBox === box) {
+            // Si vuelves a hacer clic en el mismo recuadro, deselecciona
+            selectedBox = null;
+            selectedColor = null;
+            document.getElementById('selectedColorLabel').textContent = '';
+            document.querySelectorAll('.color-box').forEach(box => {
+                box.classList.remove('selected');
+                box.style.opacity = '1';
+                // No es necesario ocultar explícitamente las etiquetas
+                // porque dependerán de la clase 'selected' y el CSS
+            });
+        } else {
+            // Seleccionar un nuevo recuadro y color
+            selectedBox = box;
+            selectedColor = color;
+
+            // Actualizar clases y opacidad para todos los recuadros
+            document.querySelectorAll('.color-box').forEach(box => {
+                if (box === selectedBox) {
+                    box.classList.add('selected');
+                    box.style.opacity = '1';
+                    // Mostrar la etiqueta seleccionada en la parte inferior
+                    let label = box.querySelector('.color-label').value || 'Sin etiqueta';
+                    document.getElementById('selectedColorLabel').textContent = label;
+                } else {
+                    box.classList.remove('selected');
+                    box.style.opacity = '0.5';
+                    // No es necesario ocultar explícitamente las etiquetas
+                    // porque dependerán de la clase 'selected' y el CSS
+                }
+            });
+        }
+
+        // Detener la propagación del evento para evitar conflictos
+        if (event) event.stopPropagation();
+    }
+        
+        function editLabel(input) {
+            input.style.display = 'block';
+            input.focus();
+        }
+        function saveColorLabels() {
+            let colorLabels = {};
+            document.querySelectorAll('.color-box').forEach(box => {
+                let color = box.style.backgroundColor;
+                let label = box.querySelector('.color-label').value || '';
+                colorLabels[color] = label;
+            });
+            localStorage.setItem('colorLabels', JSON.stringify(colorLabels));
+        }
+
+        function loadColorLabels() {
+            let colorLabels = JSON.parse(localStorage.getItem('colorLabels')) || {};
+            document.querySelectorAll('.color-box').forEach(box => {
+                let color = box.style.backgroundColor;
+                if (colorLabels[color]) {
+                    box.querySelector('.color-label').value = colorLabels[color];
+                }
+            });
+        }
+
+        function saveLabel(input) {
+            // Obtener el color actual y normalizarlo
+            let boxColor = window.getComputedStyle(input.parentElement).backgroundColor;
+            let hexColor = rgbToHex(boxColor);
+            let newLabel = input.value || '';
+            
+            // Cargar datos
+            let colorLabels = JSON.parse(localStorage.getItem('colorLabels')) || {};
+            let timeRecords = JSON.parse(localStorage.getItem('timeRecords')) || {};
+            
+            // Encontrar la etiqueta anterior
+            let oldLabel = '';
+            for (let color in colorLabels) {
+                if (rgbToHex(color).toLowerCase() === hexColor.toLowerCase()) {
+                    oldLabel = colorLabels[color];
+                    break;
+                }
+            }
+            
+            // Actualizar la interfaz y guardar la nueva etiqueta
+            updateColorLabel(input);
+            saveColorLabels();
+            
+            console.log(`Debug - Color: ${hexColor}, Old Label: "${oldLabel}", New Label: "${newLabel}"`);
+            
+            // Si la etiqueta cambió, BORRAR DIRECTAMENTE los registros para este color
+            if (newLabel !== oldLabel && oldLabel !== '') {
+                console.log(`Etiqueta cambiada de "${oldLabel}" a "${newLabel}". Color: ${hexColor}`);
+                
+                // SOLUCIÓN DIRECTA: Borrar los registros asociados con este color
+                let timeRecordKeys = Object.keys(timeRecords);
+                console.log("Registros antes de borrar:", JSON.stringify(timeRecords));
+                
+                let found = false;
+                timeRecordKeys.forEach(key => {
+                    // Comparar en formato hex para asegurar la coincidencia, IGNORANDO MAYÚSCULAS/MINÚSCULAS
+                    if (rgbToHex(key).toLowerCase() === hexColor.toLowerCase()) {
+                        console.log(`ENCONTRADO registro para borrar: ${key}`);
+                        delete timeRecords[key];
+                        found = true;
+                    }
+                });
+                
+                if (found) {
+                    console.log("Registros después de borrar:", JSON.stringify(timeRecords));
+                    localStorage.setItem('timeRecords', JSON.stringify(timeRecords));
+                    // La línea de alert ha sido eliminada
+                    //para notificaciones se usa alert()
+                    // Actualizar el gráfico si está visible
+                    if (document.getElementById('chartContainer').style.display !== 'none') {
+                        updateChart();
+                    }
+                } else {
+                    console.log("NO se encontraron registros para borrar");
+                }
+            }
+        }
+
+
+        function updateColorLabel(input) {
+            if (selectedColor && input.parentElement.style.backgroundColor === selectedColor) {
+                document.getElementById('selectedColorLabel').textContent = input.value || 'Sin etiqueta';
+            }
+        }
+        function rgbToHex(rgb) {
+            if (!rgb) return "";
+            // Si ya es formato hex, devolverlo
+            if (rgb.startsWith('#')) return rgb;
+            
+            // Para formato rgb(r, g, b)
+            let match = rgb.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
+            if (!match) return "";
+            
+            function hex(x) {
+                return ("0" + parseInt(x).toString(16)).slice(-2);
+            }
+            
+            return "#" + hex(match[1]) + hex(match[2]) + hex(match[3]);
+        }
+
+        function updateClock() {
+            let time = isWorking ? workTime : breakTime;
+            
+            // Actualizar la visualización
+            updateClockDisplay();
+            
+            // Solo decrementar si queda tiempo
+            if (time > 0) {
+                if (isWorking) {
+                    workTime--;
+                    if (selectedColor) {
+                        recordStudyTime(selectedColor, 1);
+                    }
+                } else {
+                    breakTime--;
+                    if (selectedColor) {
+                        recordBreakTime(selectedColor, 1);
+                    }
+                }
+            } else {
+                pausePomodoro();
+                let alarmSound = document.getElementById('alarmSound');
+                alarmSound.play();
+                
+                // Mostrar botón para detener la alarma
+                document.getElementById('stopSoundContainer').style.display = 'block';
+                
+                // Cambiar entre estudio y descanso después de 1 segundo
+                setTimeout(function() {
+                    isWorking = !isWorking;
+                    workTime = document.getElementById('workTime').value * 60;
+                    breakTime = document.getElementById('breakTime').value * 60;
+                    updateClockDisplay(); // Usar la nueva función
+                    document.getElementById('checkbox').checked = false;
+                }, 1000);
+            }
+        }
+
+        function handleClockStyleChange() {
+            let clockStyle = document.getElementById('clockStyle').value;
+            let customFontInput = document.getElementById('customFont');
+            if (clockStyle === 'custom') {
+                customFontInput.style.display = 'block';
+            } else {
+                customFontInput.style.display = 'none';
+            }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            document.querySelectorAll('.container').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('.clock-container').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('.controls-container').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('.label').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('button').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('.checkbox-container').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('.inputbox').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('.button.stop-sound').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('.stop-sound').forEach(el => el.classList.toggle('dark-mode'));
+            
+            // Añadir esta línea para el contenedor del gráfico
+            document.getElementById('chartContainer').classList.toggle('dark-mode');
+        }
+        function startPomodoro() {
+            timer = setInterval(updateClock, 1000);
+        }
+
+        function pausePomodoro() {
+            clearInterval(timer);
+            timer = null;
+        }
+
+        function resetPomodoro() {
+            clearInterval(timer);
+            timer = null;
+            workTime = document.getElementById('workTime').value * 60;
+            breakTime = document.getElementById('breakTime').value * 60;
+            isWorking = true;
+            updateClock();
+        }
+
+
+        function toggleSettings() {
+            let settings = document.getElementById('settings');
+            settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
+        }
+        function removeBackground() {
+            document.body.style.backgroundImage = '';
+            localStorage.removeItem('background');
+            saveSettings();
+        }
+
+        function removeMusic() {
+            stopAndClearAudio();
+            localStorage.removeItem('musicName');
+            document.getElementById('musicSelect').value = 'none';
+            document.getElementById('music').style.display = 'none';
+            
+            // Remover la etiqueta de música si existe
+            let musicNote = document.querySelector('.music-note');
+            if (musicNote) {
+                musicNote.remove();
+            }
+        }
+        function handleBackgroundChange() {
+            let backgroundSelect = document.getElementById('backgroundSelect').value;
+            let backgroundInput = document.getElementById('background');
+            if (backgroundSelect === 'file') {
+                backgroundInput.style.display = 'block';
+            } else {
+                backgroundInput.style.display = 'none';
+                document.body.style.backgroundImage = '';
+                localStorage.removeItem('background');
+                saveSettings();
+            }
+        }
+        let audio;
+
+        function handleMusicChange() {
+            let musicSelect = document.getElementById('musicSelect');
+            let musicInput = document.getElementById('music');
+            if (musicSelect.value === 'file') {
+                musicInput.style.display = 'block';
+            } else {
+                musicInput.style.display = 'none';
+                stopAndClearAudio();
+                localStorage.removeItem('musicName');
+                saveSettings();
+                
+                // Remover la etiqueta de música si existe
+                let musicNote = document.querySelector('.music-note');
+                if (musicNote) {
+                    musicNote.remove();
+                }
+            }
+        }
+
+        function applySettings() {
+            let backgroundSelect = document.getElementById('backgroundSelect').value;
+            if (backgroundSelect === 'none') {
+                document.body.style.backgroundImage = '';
+                localStorage.removeItem('background');
+            } else {
+                let background = document.getElementById('background').files[0];
+                if (background) {
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.body.style.backgroundImage = `url(${e.target.result})`;
+                        localStorage.setItem('background', e.target.result);
+                    };
+                    reader.readAsDataURL(background);
+                }
+            }
+
+            let musicSelect = document.getElementById('musicSelect').value;
+            if (musicSelect === 'none') {
+                stopAndClearAudio();
+                localStorage.removeItem('musicName');
+                
+                // Remover la etiqueta de música si existe
+                let musicNote = document.querySelector('.music-note');
+                if (musicNote) {
+                    musicNote.remove();
+                }
+            } else {
+                let music = document.getElementById('music').files[0];
+                if (music) {
+                    stopAndClearAudio();
+                    
+                    // Crear un objeto URL solo para la sesión actual
+                    let objectURL = URL.createObjectURL(music);
+                    audio = new Audio(objectURL);
+                    audio.loop = true;
+                    
+                    // Guardar solo el nombre del archivo
+                    localStorage.setItem('musicName', music.name);
+                    
+                    // Reproducir el audio con manejo de errores
+                    audio.play().catch(e => {
+                        console.error('No se pudo reproducir el audio:', e);
+                        alert('No se pudo reproducir el audio. Intente hacer clic en la página primero.');
+                    });
+                    
+                    // Actualizar etiqueta de música
+                    updateMusicLabel(music.name);
+                }
+            }
+
+            let clockElement = document.getElementById('clock');
+            let clockStyle = document.getElementById('clockStyle').value;
+            if (clockStyle === 'custom') {
+                let customFont = document.getElementById('customFont').files[0];
+                if (customFont) {
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        let newFont = new FontFace('CustomFont', `url(${e.target.result})`);
+                        newFont.load().then(function(loadedFont) {
+                            document.fonts.add(loadedFont);
+                            clockElement.style.fontFamily = 'CustomFont';
+                            localStorage.setItem('clockStyle', 'CustomFont');
+                            localStorage.setItem('customFont', e.target.result);
+                        });
+                    };
+                    reader.readAsDataURL(customFont);
+                }
+            } else {
+                clockElement.style.fontFamily = clockStyle;
+                localStorage.setItem('clockStyle', clockStyle);
+            }
+
+            let clockSize = document.getElementById('clockSize').value;
+            clockElement.style.fontSize = `${clockSize}px`;
+            clockElement.style.lineHeight = `${clockSize}px`; // Asegura que el texto esté centrado verticalmente
+            clockElement.style.width = '100%'; // Asegura que el contenedor del reloj ocupe todo el ancho
+            clockElement.style.textAlign = 'center'; // Centra el texto horizontalmente
+            localStorage.setItem('clockSize', clockSize);
+
+            saveSettings(); // Añadir esta línea para guardar los ajustes
+        }
+
+        function removeBackground() {
+            document.body.style.backgroundImage = '';
+            localStorage.removeItem('background');
+            saveSettings();
+        }
+
+        function removeMusic() {
+            if (audio) {
+                audio.pause();
+                audio = null;
+            }
+            localStorage.removeItem('music');
+            saveSettings();
+        }
+        function togglePomodoro() {
+            if (timer) {
+                pausePomodoro();
+            } else {
+                startPomodoro();
+            }
+        }
+
+        function toggleTaskList() {
+            let taskList = document.getElementById('taskList');
+            let addBtn = document.querySelector('.add-btn');
+            if (taskList.style.display === 'none') {
+                taskList.style.display = 'block';
+                addBtn.style.display = 'block';
+            } else {
+                taskList.style.display = 'none';
+                addBtn.style.display = 'none';
+            }
+        }
+
+        function addTask() {
+            let taskList = document.getElementById('taskList');
+            let taskItem = document.createElement('li');
+            taskItem.style.display = 'flex';
+            taskItem.style.alignItems = 'center';
+            taskItem.style.marginBottom = '2px'; // Reducido el espacio entre tareas
+            taskItem.innerHTML = `
+                <label class="checkbox-container" style="margin-right: 10px;">
+                    <input class="custom-checkbox" type="checkbox" onchange="saveTasks()">
+                    <span class="checkmark" style="top: -5px;"></span> <!-- Subido el cuadro de marcado -->
+                </label>
+                <div class="inputbox" style="flex-grow: 1; margin-right: 10px;">
+                    <input required="required" type="text" oninput="saveTasks()">
+                    <span>Tarea</span>
+                    <i></i>
+                </div>
+                <button class="delete-button" onclick="deleteTask(this)">
+                    <svg class="trash-svg" viewBox="0 -10 64 74" xmlns="http://www.w3.org/2000/svg">
+                        <g id="trash-can">
+                            <rect x="16" y="24" width="32" height="30" rx="3" ry="3" fill="#e74c3c"></rect>
+                            <g transform-origin="12 18" id="lid-group">
+                                <rect x="12" y="12" width="40" height="6" rx="2" ry="2" fill="#c0392b"></rect>
+                                <rect x="26" y="8" width="12" height="4" rx="2" ry="2" fill="#c0392b"></rect>
+                            </g>
+                        </g>
+                    </svg>
+                </button>
+            `;
+            taskList.appendChild(taskItem);
+            saveTasks(); // Añadir esta línea para guardar las tareas
+        }
+
+        function deleteTask(button) {
+            let taskItem = button.parentElement;
+            taskItem.remove();
+            saveTasks();
+        }
+
+        function saveTasks() {
+        let tasks = [];
+        document.querySelectorAll('#taskList li').forEach(taskItem => {
+            let task = {
+                text: taskItem.querySelector('.inputbox input').value,
+                checked: taskItem.querySelector('.custom-checkbox').checked
+            };
+            tasks.push(task);
+        });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+        
+    function loadTasks() {
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let taskList = document.getElementById('taskList');
+    taskList.innerHTML = '';
+    tasks.forEach(task => {
+        let taskItem = document.createElement('li');
+        taskItem.style.display = 'flex';
+        taskItem.style.alignItems = 'center';
+        taskItem.style.marginBottom = '2px'; // Reducido el espacio entre tareas
+        taskItem.innerHTML = `
+            <label class="checkbox-container" style="margin-right: 10px;">
+                <input class="custom-checkbox" type="checkbox" ${task.checked ? 'checked' : ''} onchange="saveTasks()">
+                <span class="checkmark" style="top: -5px;"></span> <!-- Subido el cuadro de marcado -->
+            </label>
+            <div class="inputbox" style="flex-grow: 1; margin-right: 10px;">
+                <input required="required" type="text" value="${task.text}" oninput="saveTasks()">
+                <span>Tarea</span>
+                <i></i>
+            </div>
+            <button class="delete-button" onclick="deleteTask(this)">
+                <svg class="trash-svg" viewBox="0 -10 64 74" xmlns="http://www.w3.org/2000/svg">
+                    <g id="trash-can">
+                        <rect x="16" y="24" width="32" height="30" rx="3" ry="3" fill="#e74c3c"></rect>
+                        <g transform-origin="12 18" id="lid-group">
+                            <rect x="12" y="12" width="40" height="6" rx="2" ry="2" fill="#c0392b"></rect>
+                            <rect x="26" y="8" width="12" height="4" rx="2" ry="2" fill="#c0392b"></rect>
+                        </g>
+                    </g>
+                </svg>
+            </button>
+        `;
+        taskList.appendChild(taskItem);
+    });
+}
+        function saveSettings() {
+            let settings = {
+                workTime: document.getElementById('workTime').value,
+                breakTime: document.getElementById('breakTime').value,
+                clockStyle: document.getElementById('clockStyle').value,
+                clockSize: document.getElementById('clockSize').value,
+                background: localStorage.getItem('background'),
+                customFont: localStorage.getItem('customFont'),
+                musicName: localStorage.getItem('musicName')
+            };
+            localStorage.setItem('settings', JSON.stringify(settings));
+        }
+
+        
+        function loadSettings() {
+            let settings = JSON.parse(localStorage.getItem('settings')) || {};
+            
+            // Actualizar valores del formulario y variables de tiempo
+            if (settings.workTime) {
+                document.getElementById('workTime').value = settings.workTime;
+                workTime = parseInt(settings.workTime) * 60; // Actualizar variable global
+            }
+            if (settings.breakTime) {
+                document.getElementById('breakTime').value = settings.breakTime;
+                breakTime = parseInt(settings.breakTime) * 60; // Actualizar variable global
+            }
+            
+            // Resto de configuraciones
+            if (settings.clockStyle) document.getElementById('clockStyle').value = settings.clockStyle;
+            if (settings.clockSize) document.getElementById('clockSize').value = settings.clockSize;
+            if (settings.background) {
+                document.body.style.backgroundImage = `url(${settings.background})`;
+                document.getElementById('backgroundSelect').value = 'file';
+            } else {
+                document.getElementById('backgroundSelect').value = 'none';
+            }
+            if (settings.customFont) {
+                let newFont = new FontFace('CustomFont', `url(${settings.customFont})`);
+                newFont.load().then(function(loadedFont) {
+                    document.fonts.add(loadedFont);
+                    document.getElementById('clock').style.fontFamily = 'CustomFont';
+                });
+            } else if (settings.clockStyle) {
+                document.getElementById('clock').style.fontFamily = settings.clockStyle;
+            }
+            if (settings.musicName) {
+                document.getElementById('musicSelect').value = 'file';
+                updateMusicLabel(settings.musicName);
+            } else {
+                document.getElementById('musicSelect').value = 'none';
+            }
+            
+            // Aplicar tamaño del reloj
+            if (settings.clockSize) {
+                document.getElementById('clock').style.fontSize = `${settings.clockSize}px`;
+                document.getElementById('clock').style.lineHeight = `${settings.clockSize}px`; // Asegura que el texto esté centrado verticalmente
+                document.getElementById('clock').style.width = '100%'; // Asegura que el contenedor del reloj ocupe todo el ancho
+            }
+            
+            // Actualizar la visualización del reloj con el tiempo correcto
+            updateClock();
+        }
+
+        // Registrar tiempo de estudio
+        function recordStudyTime(color, seconds) {
+            if (!color) return;
+            
+            let timeRecords = JSON.parse(localStorage.getItem('timeRecords')) || {};
+            
+            if (!timeRecords[color]) {
+                timeRecords[color] = {
+                    study: { total: 0, month: 0 },
+                    break: { total: 0, month: 0 }
+                };
+            }
+            
+            timeRecords[color].study.total += seconds;
+            timeRecords[color].study.month += seconds;
+            
+            localStorage.setItem('timeRecords', JSON.stringify(timeRecords));
+        }
+
+        // Registrar tiempo de descanso
+        function recordBreakTime(color, seconds) {
+            if (!color) return;
+            
+            let timeRecords = JSON.parse(localStorage.getItem('timeRecords')) || {};
+            
+            if (!timeRecords[color]) {
+                timeRecords[color] = {
+                    study: { total: 0, month: 0 },
+                    break: { total: 0, month: 0 }
+                };
+            }
+            
+            timeRecords[color].break.total += seconds;
+            timeRecords[color].break.month += seconds;
+            
+            localStorage.setItem('timeRecords', JSON.stringify(timeRecords));
+        }
+
+        // Actualizar gráfico
+        function updateChart() {
+            let chartDiv = document.getElementById('chart');
+            chartDiv.innerHTML = '';
+            
+            let timeRecords = JSON.parse(localStorage.getItem('timeRecords')) || {};
+            let colorLabels = JSON.parse(localStorage.getItem('colorLabels')) || {};
+            
+            // Encontrar el valor máximo para escalar correctamente
+            let maxValue = 0;
+            for (let color in timeRecords) {
+                let totalTime = timeRecords[color].study.month + timeRecords[color].break.month;
+                if (totalTime > maxValue) maxValue = totalTime;
+            }
+            
+            // Si no hay datos, mostrar mensaje
+            if (maxValue === 0) {
+                chartDiv.innerHTML = '<p style="text-align: center; font-style: italic;">No hay datos de estudio registrados</p>';
+                return;
+            }
+            
+            // Primero, recopilamos todos los colores y sus etiquetas actuales
+            let currentLabels = {};
+            document.querySelectorAll('.color-box').forEach(box => {
+                let hexColor = rgbToHex(box.style.backgroundColor);
+                let rgbColor = box.style.backgroundColor;
+                let label = box.querySelector('.color-label').value || 'Sin etiqueta';
+                
+                // Guardar tanto en formato hex como rgb
+                currentLabels[hexColor] = label;
+                currentLabels[rgbColor] = label;
+            });
+            
+            // Crear barras para cada color con etiqueta
+            for (let color in timeRecords) {
+                let label = null;
+                
+                // 1. Buscar coincidencia exacta en currentLabels
+                if (currentLabels[color]) {
+                    label = currentLabels[color];
+                } 
+                // 2. Buscar coincidencia exacta en colorLabels almacenados
+                else if (colorLabels[color]) {
+                    label = colorLabels[color];
+                } 
+                // 3. Intentar convertir entre formatos y buscar nuevamente
+                else {
+                    let hexColor = rgbToHex(color);
+                    let normalizedColor = color.toLowerCase().replace(/\s+/g, '');
+                    
+                    // Buscar en currentLabels o colorLabels
+                    for (let storedColor in currentLabels) {
+                        let normalizedStored = storedColor.toLowerCase().replace(/\s+/g, '');
+                        if (normalizedColor === normalizedStored || hexColor === rgbToHex(storedColor)) {
+                            label = currentLabels[storedColor];
+                            break;
+                        }
+                    }
+                    
+                    // Si aún no hay coincidencia, buscar en colorLabels
+                    if (!label) {
+                        for (let storedColor in colorLabels) {
+                            let normalizedStored = storedColor.toLowerCase().replace(/\s+/g, '');
+                            if (normalizedColor === normalizedStored || hexColor === rgbToHex(storedColor)) {
+                                label = colorLabels[storedColor];
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Si todavía no hay etiqueta, usar una amigable en lugar del código de color
+                if (!label) {
+                    // Buscar el color-box que más se parezca
+                    document.querySelectorAll('.color-box').forEach(box => {
+                        let boxColor = box.style.backgroundColor;
+                        if (color.toLowerCase() === boxColor.toLowerCase() || 
+                            rgbToHex(color).toLowerCase() === rgbToHex(boxColor).toLowerCase()) {
+                            label = box.querySelector('.color-label').value || 'Sin etiqueta';
+                        }
+                    });
+                    
+                    // Si aún no hay coincidencia, usar nombre genérico
+                    if (!label) {
+                        label = 'Material ' + (Object.keys(timeRecords).indexOf(color) + 1);
+                    }
+                }
+                
+                let studyTime = timeRecords[color].study.month;
+                let breakTime = timeRecords[color].break.month;
+                let totalTime = studyTime + breakTime;
+                
+                if (totalTime > 0) {
+                    let barContainer = document.createElement('div');
+                    barContainer.className = 'chart-bar-container';
+                    
+                    let labelDiv = document.createElement('div');
+                    labelDiv.className = 'chart-bar-label';
+                    labelDiv.textContent = label;
+                    barContainer.appendChild(labelDiv);
+                    
+                    let barDiv = document.createElement('div');
+                    barDiv.className = 'chart-bar';
+                    barDiv.dataset.color = color;
+                    barDiv.onclick = function() { showChartDetail(color, label); };
+                    
+                    let studyWidth = (studyTime / totalTime * 100);
+                    let breakWidth = (breakTime / totalTime * 100);
+                    
+                    if (studyTime > 0) {
+                        let studyBar = document.createElement('div');
+                        studyBar.className = 'chart-bar-study';
+                        studyBar.style.width = studyWidth + '%';
+                        barDiv.appendChild(studyBar);
+                    }
+                    
+                    if (breakTime > 0) {
+                        let breakBar = document.createElement('div');
+                        breakBar.className = 'chart-bar-break';
+                        breakBar.style.width = breakWidth + '%';
+                        barDiv.appendChild(breakBar);
+                    }
+                    
+                    barContainer.appendChild(barDiv);
+                    
+                    let valueDisplay = document.createElement('div');
+                    valueDisplay.className = 'chart-bar-value';
+                    valueDisplay.textContent = formatTime(totalTime);
+                    barContainer.appendChild(valueDisplay);
+                    
+                    chartDiv.appendChild(barContainer);
+                }
+            }
+            
+            // Añadir leyenda
+            let legend = document.createElement('div');
+            legend.className = 'chart-legend';
+            
+            let studyLegend = document.createElement('div');
+            studyLegend.className = 'legend-item';
+            let studyColor = document.createElement('div');
+            studyColor.className = 'legend-color chart-bar-study';
+            studyLegend.appendChild(studyColor);
+            studyLegend.appendChild(document.createTextNode('Estudio'));
+            
+            let breakLegend = document.createElement('div');
+            breakLegend.className = 'legend-item';
+            let breakColor = document.createElement('div');
+            breakColor.className = 'legend-color chart-bar-break';
+            breakLegend.appendChild(breakColor);
+            breakLegend.appendChild(document.createTextNode('Descanso'));
+            
+            legend.appendChild(studyLegend);
+            legend.appendChild(breakLegend);
+            
+            chartDiv.appendChild(legend);
+        }
+        // Variable global para rastrear la última barra seleccionada
+        let lastSelectedColorChart = null;
+
+        // Mostrar detalles al hacer click en una barra
+        function showChartDetail(color, label) {
+            let timeRecords = JSON.parse(localStorage.getItem('timeRecords')) || {};
+            
+            if (!timeRecords[color]) return;
+            
+            let chartInfo = document.getElementById('chartInfo');
+            let chartInfoTitle = document.getElementById('chartInfoTitle');
+            let chartInfoContent = document.getElementById('chartInfoContent');
+            
+            // Si hacemos clic en la misma barra, alternamos la visibilidad
+            if (lastSelectedColorChart === color) {
+                if (chartInfo.style.display === 'block') {
+                    chartInfo.style.display = 'none';
+                    lastSelectedColorChart = null;
+                    return;
+                }
+            }
+            
+            // Guardamos la barra seleccionada actualmente
+            lastSelectedColorChart = color;
+            
+            chartInfo.style.display = 'block';
+            chartInfoTitle.textContent = label || 'Sin etiqueta';
+            
+            // Crear contenido detallado
+            let content = `
+                <div style="margin-bottom: 10px;">
+                    <strong>Este mes:</strong>
+                    <div>Estudiando: ${formatTime(timeRecords[color].study.month)}</div>
+                    <div>Descansando: ${formatTime(timeRecords[color].break.month)}</div>
+                    <div>Total: ${formatTime(timeRecords[color].study.month + timeRecords[color].break.month)}</div>
+                </div>
+                <div>
+                    <strong>Toda la vida:</strong>
+                    <div>Estudiando: ${formatTime(timeRecords[color].study.total)}</div>
+                    <div>Descansando: ${formatTime(timeRecords[color].break.total)}</div>
+                    <div>Total: ${formatTime(timeRecords[color].study.total + timeRecords[color].break.total)}</div>
+                </div>
+            `;
+            
+            chartInfoContent.innerHTML = content;
+        }
+
+        // Formatear segundos a formato legible
+        function formatTime(seconds) {
+            if (seconds < 60) return `${seconds}s`;
+            
+            let minutes = Math.floor(seconds / 60);
+            seconds = seconds % 60;
+            
+            if (minutes < 60) {
+                return `${minutes}m ${seconds}s`;
+            }
+            
+            let hours = Math.floor(minutes / 60);
+            minutes = minutes % 60;
+            
+            return `${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        // Verificar si es nuevo mes para resetear valores mensuales
+        function checkMonthReset() {
+            let lastResetDate = localStorage.getItem('lastMonthReset');
+            let currentDate = new Date();
+            let currentMonth = currentDate.getMonth();
+            let currentYear = currentDate.getFullYear();
+            
+            if (!lastResetDate) {
+                // Primera ejecución, guardar fecha actual
+                localStorage.setItem('lastMonthReset', JSON.stringify({ month: currentMonth, year: currentYear }));
+                return;
+            }
+            
+            let lastReset = JSON.parse(lastResetDate);
+            
+            // Si el mes o año cambió, resetear valores mensuales
+            if (currentMonth !== lastReset.month || currentYear !== lastReset.year) {
+                let timeRecords = JSON.parse(localStorage.getItem('timeRecords')) || {};
+                
+                for (let color in timeRecords) {
+                    timeRecords[color].study.month = 0;
+                    timeRecords[color].break.month = 0;
+                }
+                
+                localStorage.setItem('timeRecords', JSON.stringify(timeRecords));
+                localStorage.setItem('lastMonthReset', JSON.stringify({ month: currentMonth, year: currentYear }));
+            }
+        }
+        function stopAndClearAudio() {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+                URL.revokeObjectURL(audio.src); // Liberar memoria
+                audio = null;
+            }
+        }
+        function updateMusicLabel(name) {
+            // Remover etiqueta anterior si existe
+            let musicNote = document.querySelector('.music-note');
+            if (musicNote) {
+                musicNote.remove();
+            }
+            
+            // Crear nueva etiqueta
+            let musicLabel = document.createElement('div');
+            musicLabel.textContent = `Música seleccionada: ${name}`;
+            musicLabel.style.fontSize = '12px';
+            musicLabel.style.marginTop = '5px';
+            musicLabel.className = 'music-note';
+            
+            // Agregar al DOM
+            let musicSelect = document.getElementById('musicSelect');
+            musicSelect.parentNode.insertBefore(musicLabel, musicSelect.nextSibling);
+        }
+        function updateClockDisplay() {
+            let time = isWorking ? workTime : breakTime;
+            let minutes = Math.floor(time / 60);
+            let seconds = time % 60;
+            clockElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        window.onload = function() {
+            loadTasks();
+            loadSettings();
+            loadColorLabels();
+            checkMonthReset(); // Verificar si es nuevo mes
+            updateClock();
+        };
+    </script>
+</body>
+</html>
